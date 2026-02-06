@@ -1,0 +1,32 @@
+{
+  "https://www.cisa.gov/news-events/alerts/2026/02/03/cisa-adds-four-known-exploited-vulnerabilities-catalog": {
+    "etag": "",
+    "last_modified": "",
+    "cached_at": "2026-02-06T07:11:52.354096+00:00"
+  },
+  "https://www.cisa.gov/news-events/cybersecurity-advisories?page=0": {
+    "etag": "",
+    "last_modified": "",
+    "cached_at": "2026-02-06T07:11:51.180510+00:00"
+  },
+  "https://www.cisa.gov/news-events/alerts/2026/02/05/cisa-adds-two-known-exploited-vulnerabilities-catalog": {
+    "etag": "",
+    "last_modified": "",
+    "cached_at": "2026-02-06T07:11:51.292946+00:00"
+  },
+  "https://www.cisa.gov/news-events/alerts/2026/01/29/cisa-adds-one-known-exploited-vulnerability-catalog": {
+    "etag": "",
+    "last_modified": "",
+    "cached_at": "2026-02-06T07:11:53.414964+00:00"
+  },
+  "https://www.cisa.gov/news-events/alerts/2026/01/28/fortinet-releases-guidance-address-ongoing-exploitation-authentication-bypass-vulnerability-cve-2026": {
+    "etag": "",
+    "last_modified": "",
+    "cached_at": "2026-02-06T07:11:54.476521+00:00"
+  },
+  "https://www.cisa.gov/news-events/alerts/2026/01/27/cisa-adds-one-known-exploited-vulnerability-catalog": {
+    "etag": "",
+    "last_modified": "",
+    "cached_at": "2026-02-06T07:11:55.532134+00:00"
+  }
+}
