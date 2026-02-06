@@ -5,11 +5,11 @@ This scraper implements a two-phase approach:
 2) Fetch and parse individual advisories for structured data extraction
 
 Extracts: title, advisory type, release date, CVEs with descriptions, body text,
-outbound links, and stores with full provenance in JSONL format.
+and stores in CSV format with flattened structure.
 
 Usage:
-    python scrape_cisa_advisory.py --max-advisories 50 --output data/advisories.jsonl
-    python scrape_cisa_advisory.py --url https://www.cisa.gov/news-events/alerts/2026/02/03/... --output single.jsonl
+    python scrape_cisa_advisory.py --max-advisories 50 --output data/advisories.csv
+    python scrape_cisa_advisory.py --url https://www.cisa.gov/news-events/alerts/2026/02/03/... --output single.csv
 
 Dependencies:
     pip install requests beautifulsoup4 lxml
@@ -18,6 +18,7 @@ Dependencies:
 from __future__ import annotations
 
 import argparse
+import csv
 import gzip
 import hashlib
 import json
@@ -518,13 +519,41 @@ class CISAAdvisoryScraper:
         return advisories
 
 
-def write_jsonl(advisories: List[Dict[str, Any]], output_path: Path) -> None:
-    """Write advisories to JSONL file."""
+def write_csv(advisories: List[Dict[str, Any]], output_path: Path) -> None:
+    """Write advisories to CSV file with flattened structure."""
+    if not advisories:
+        return
+    
     output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    with open(output_path, "w", encoding="utf-8") as f:
-        for advisory in advisories:
-            f.write(json.dumps(advisory, ensure_ascii=False) + "\n")
+    
+    # Flatten nested data for CSV
+    csv_rows = []
+    for adv in advisories:
+        # Combine CVE IDs and descriptions
+        cve_ids = ", ".join(cve["id"] for cve in adv.get("cves", []))
+        cve_descriptions = " | ".join(
+            f"{cve['id']}: {cve.get('description', '')}" 
+            for cve in adv.get("cves", [])
+        )
+        
+        csv_rows.append({
+            "url": adv.get("source_url", ""),
+            "title": adv.get("title", ""),
+            "advisory_type": adv.get("advisory_type", ""),
+            "release_date": adv.get("release_date", {}).get("iso8601", ""),
+            "cve_ids": cve_ids,
+            "cve_count": len(adv.get("cves", [])),
+            "cve_descriptions": cve_descriptions,
+            "body_text": adv.get("body_text", ""),
+            "fetched_at": adv.get("fetched_at", ""),
+        })
+    
+    # Write to CSV
+    with open(output_path, "w", newline="", encoding="utf-8") as f:
+        if csv_rows:
+            writer = csv.DictWriter(f, fieldnames=csv_rows[0].keys())
+            writer.writeheader()
+            writer.writerows(csv_rows)
 
 
 def validate_advisory(advisory: Dict[str, Any]) -> List[str]:
@@ -550,8 +579,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("data/advisories.jsonl"),
-        help="Output JSONL file path (default: data/advisories.jsonl)",
+        default=Path("data/advisories.csv"),
+        help="Output CSV file path (default: data/advisories.csv)",
     )
     parser.add_argument(
         "--max-advisories",
@@ -616,7 +645,7 @@ def main() -> None:
                 print(f"  {advisory['source_url']}: {', '.join(issues)}")
 
     # Write output
-    write_jsonl(advisories, args.output)
+    write_csv(advisories, args.output)
 
     # Summary
     total_cves = sum(len(adv.get("cves", [])) for adv in advisories)

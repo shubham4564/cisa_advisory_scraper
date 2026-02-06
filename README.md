@@ -1,113 +1,65 @@
-# Cybersecurity + Quotes Scraper for NLP Practice
+# CISA Cybersecurity Advisory Scraper
 
-Scrapes NLP-friendly text datasets from HTML (no APIs):
-- **cisa**: Cybersecurity advisories from https://www.cisa.gov/news-events/cybersecurity-advisories (titles, dates, summaries, URLs).
-- **cisa-detailed**: Enhanced scraper with deep field extraction (CVEs, body text, links, JSONL output).
-- **quotes**: Prose quotes + authors + tags from https://quotes.toscrape.com.
+Scrapes cybersecurity advisories from https://www.cisa.gov for NLP analysis. Extracts prose text, CVE details, and metadata from HTML (no APIs).
 
-## Requirements
-- Python 3.10+ (tested on Ubuntu and Windows).
-- Install deps once: `python -m pip install -r requirements.txt`.
+## Setup
 
-## How to run
-
-### Basic CISA listing scraper (CSV)
 ```bash
-python scraper.py --source cisa --max-pages 5 --output data/cisa_advisories.csv
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-### Enhanced CISA advisory scraper (JSONL with detailed extraction)
+**Requirements**: Python 3.10+, requests, beautifulsoup4, lxml
+
+## Usage
+
 ```bash
-# Discover and scrape multiple advisories
-python scrape_cisa_advisory.py --max-advisories 50 --output data/advisories.jsonl
+# Scrape recent advisories (default: 10)
+python scrape_cisa_advisory.py --output data/advisories.csv
 
-# Scrape a specific advisory
-python scrape_cisa_advisory.py --url "https://www.cisa.gov/news-events/alerts/2026/02/03/cisa-adds-four-known-exploited-vulnerabilities-catalog" --output data/single.jsonl
+# Scrape more advisories
+python scrape_cisa_advisory.py --max-advisories 50 --output data/advisories.csv
 
-# With validation and custom delay
-python scrape_cisa_advisory.py --max-advisories 20 --delay 1.5 --validate --output data/validated.jsonl
+# Scrape specific URL
+python scrape_cisa_advisory.py --url "https://www.cisa.gov/news-events/alerts/2026/02/03/..." --output data/single.csv
+
+# Add delay between requests (polite scraping)
+python scrape_cisa_advisory.py --max-advisories 20 --delay 2.0
 ```
 
-### Quotes scraper
-```bash
-python scraper.py --source quotes --max-pages 10 --output data/quotes.csv
-```
+## What It Scrapes
 
-Adjust politeness: add `--delay 1.0` (seconds between requests).
+**Data source**: CISA cybersecurity advisories (alerts, advisories, ICS advisories)
 
-## Outputs
+**Why this data**: Rich cybersecurity prose text with structured metadata - ideal for NLP tasks like threat classification, entity extraction, and security text analysis. Contains technical descriptions, mitigation guidance, and vulnerability details.
 
-### Basic scraper (scraper.py)
-- CISA CSV columns: `title,date,summary,url`
-- Quotes CSV columns: `quote,author,tags,author_about` (sample: data/sample_quotes.csv)
+**Output format**: CSV with columns:
+- `url`: Advisory URL
+- `title`: Advisory title
+- `advisory_type`: ALERT, ADVISORY, ICS ADVISORY
+- `release_date`: ISO 8601 date
+- `cve_ids`: Pipe-separated CVE identifiers
+- `cve_count`: Number of CVEs
+- `cve_descriptions`: Pipe-separated CVE descriptions
+- `body_text`: Full prose content (avg 1,200 chars/advisory)
+- `fetched_at`: Scrape timestamp
 
-### Enhanced CISA scraper (scrape_cisa_advisory.py)
-JSONL format with one advisory per line, containing:
-- `source_url`: Advisory URL
-- `fetched_at`: ISO timestamp of fetch
-- `content_hash`: SHA-256 of raw HTML for deduplication
-- `advisory_type`: ALERT, ADVISORY, ICS ADVISORY, etc.
-- `title`: H1 heading text
+**Sample output**: [data/advisories.csv](data/advisories.csv) - 9 recent advisories with 22 CVEs and 10,840 characters of prose text
 - `release_date`: `{original: "...", iso8601: "YYYY-MM-DD"}`
 - `cves`: `[{id: "CVE-...", url: "...", description: "..."}]`
 - `body_text`: Main advisory content (paragraphs)
-- `outbound_links`: `[{text: "...", url: "..."}]` for KEV, BOD, guidance docs
 
-Features:
-- **Caching**: Stores compressed HTML in `data/cache/` with ETag support
-- **Rate limiting**: Configurable delays, exponential backoff on 429/5xx
-- **Deduplication**: By content hash
-- **Validation**: Optional `--validate` flag to check for template drift
-- **Normalization**: Dates converted to ISO 8601, CVE IDs uppercased
+## Features
 
-## What gets scraped
+- **Caching**: Compressed HTML storage with ETag/Last-Modified support
+- **Rate limiting**: Configurable delays (default: 1s between requests)
+- **Multi-page discovery**: Crawls listing pages to find advisory URLs
+- **Template resilience**: Multiple fallback strategies for date extraction
+- **Deduplication**: Content-based hashing prevents duplicate processing
 
-### Basic scraper
-- CISA: advisory title, published date, short summary text if present, canonical URL.
-- Quotes: quote text, author name, tags (comma-separated), author bio URL.
+## Testing
 
-### Enhanced CISA scraper
-Phase 1 (Discovery):
-- Crawls listing pages at `/news-events/cybersecurity-advisories?page=N`
-- Filters URLs matching pattern: `/news-events/(alerts|cybersecurity-advisories|ics-advisories)/YYYY/MM/DD/...`
-
-Phase 2 (Extraction):
-- Isolates main content block (skips nav/footer)
-- Extracts structured fields: title, type, release date, CVEs with descriptions, body text, relevant outbound links
-- Detects template drift (missing H1, release date, etc.)
-
-## Reproducibility notes
-- Uses only `requests`, `beautifulsoup4`, and `lxml` (see requirements.txt).
-- Sets a custom User-Agent and supports a configurable delay.
-- If either site changes HTML, adjust the CSS selectors in `parse_quotes`, `parse_cisa_list`, or `CISAAdvisoryScraper`.
-- Cached data stored in `data/cache/` with metadata for conditional requests.
-
-## Ethics and politeness
-- Follows CISA's standard politeness practices (rate limiting, user-agent, caching).
-- Keep `--delay` at or above 0.5s for classroom use (default: 1.0s for enhanced scraper).
-- Avoid parallel requests; scripts are single-threaded by design.
-- Uses conditional requests (ETag/If-Modified-Since) to minimize server load.
-- If you only need KEV entries, prefer the official [KEV CSV/JSON](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) instead of scraping.
-
-## Documentation deliverable
-- Export this README to PDF (Print/Save as PDF) and include:
-  - Screenshot of the CISA advisories listing page (or the quotes page if using that source).
-  - Screenshot of your terminal after running the scraper or of the generated CSV/JSONL opened in a viewer.
-  - Brief statement of why you chose the dataset and how to run the commands above.
-- Note any GenAI assistance: this code and README were drafted with GitHub Copilot and reviewed manually.
-
-## Example validation
-To test the enhanced scraper on the reference page:
 ```bash
-python scrape_cisa_advisory.py \
-  --url "https://www.cisa.gov/news-events/alerts/2026/02/03/cisa-adds-four-known-exploited-vulnerabilities-catalog" \
-  --validate \
-  --output data/test.jsonl
+# Run validation tests
+python test_scraper.py
 ```
-
-Expected extraction:
-- Title: "CISA Adds Four Known Exploited Vulnerabilities to Catalog"
-- Type: "ALERT"
-- CVEs: CVE-2019-19006, CVE-2021-39935, CVE-2025-40551, CVE-2025-64328
-- Release date normalized to ISO 8601
-
