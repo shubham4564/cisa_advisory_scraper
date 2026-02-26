@@ -1,0 +1,112 @@
+url,title,advisory_type,release_date,cve_ids,cve_count,cve_descriptions,cve_descriptions_cveorg,body_text,fetched_at
+https://www.cisa.gov/news-events/cybersecurity-advisories/aa25-050a,#StopRansomware: Ghost (Cring) Ransomware,ADVISORY,2025-02-19,"CVE-2018-13379, CVE-2010-2861, CVE-2009-3960, CVE-2019-0604, CVE-2021-34473, CVE-2021-34523, CVE-2021-31207, CVE-2020-1472, CVE-2014-1812, CVE-2017-0143, CVE-2017-0144",11,CVE-2018-13379:  | CVE-2010-2861:  | CVE-2009-3960:  | CVE-2019-0604:  | CVE-2021-34473:  | CVE-2021-34523:  | CVE-2021-31207:  | CVE-2020-1472:  | CVE-2014-1812:  | CVE-2017-0143:  | CVE-2017-0144: ,"CVE-2018-13379: An Improper Limitation of a Pathname to a Restricted Directory (""Path Traversal"") in Fortinet FortiOS 6.0.0 to 6.0.4, 5.6.3 to 5.6.7 and 5.4.6 to 5.4.12 and FortiProxy 2.0.0, 1.2.0 to 1.2.8, 1.1.0 to 1.1.6, 1.0.0 to 1.0.7 under SSL VPN web portal allows an unauthenticated attacker to download system files via special crafted HTTP resource requests. | CVE-2010-2861: Multiple directory traversal vulnerabilities in the administrator console in Adobe ColdFusion 9.0.1 and earlier allow remote attackers to read arbitrary files via the locale parameter to (1) CFIDE/administrator/settings/mappings.cfm, (2) logging/settings.cfm, (3) datasources/index.cfm, (4) j2eepackaging/editarchive.cfm, and (5) enter.cfm in CFIDE/administrator/. | CVE-2009-3960: Unspecified vulnerability in BlazeDS 3.2 and earlier, as used in LiveCycle 8.0.1, 8.2.1, and 9.0, LiveCycle Data Services 2.5.1, 2.6.1, and 3.0, Flex Data Services 2.0.1, and ColdFusion 7.0.2, 8.0, 8.0.1, and 9.0, allows remote attackers to obtain sensitive information via vectors that are associated with a request, and related to injected tags and external entity references in XML documents. | CVE-2019-0604: A remote code execution vulnerability exists in Microsoft SharePoint when the software fails to check the source markup of an application package, aka 'Microsoft SharePoint Remote Code Execution Vulnerability'. This CVE ID is unique from CVE-2019-0594. | CVE-2021-34473: Microsoft Exchange Server Remote Code Execution Vulnerability | CVE-2021-34523: Microsoft Exchange Server Elevation of Privilege Vulnerability | CVE-2021-31207: Microsoft Exchange Server Security Feature Bypass Vulnerability | CVE-2020-1472: An elevation of privilege vulnerability exists when an attacker establishes a vulnerable Netlogon secure channel connection to a domain controller, using the Netlogon Remote Protocol (MS-NRPC). An attacker who successfully exploited the vulnerability could run a specially crafted application on a device on the network.
+To exploit the vulnerability, an unauthenticated attacker would be required to use MS-NRPC to connect to a domain controller to obtain domain administrator access.
+Microsoft is addressing the vulnerability in a phased two-part rollout. These updates address the vulnerability by modifying how Netlogon handles the usage of Netlogon secure channels.
+For guidelines on how to manage the changes required for this vulnerability and more information on the phased rollout, see  How to manage the changes in Netlogon secure channel connections associated with CVE-2020-1472 (updated September 28, 2020).
+When the second phase of Windows updates become available in Q1 2021, customers will be notified via a revision to this security vulnerability. If you wish to be notified when these updates are released, we recommend that you register for the security notifications mailer to be alerted of content changes to this advisory. See Microsoft Technical Security Notifications. | CVE-2014-1812: The Group Policy implementation in Microsoft Windows Vista SP2, Windows Server 2008 SP2 and R2 SP1, Windows 7 SP1, Windows 8, Windows 8.1, and Windows Server 2012 Gold and R2 does not properly handle distribution of passwords, which allows remote authenticated users to obtain sensitive credential information and consequently gain privileges by leveraging access to the SYSVOL share, as exploited in the wild in May 2014, aka ""Group Policy Preferences Password Elevation of Privilege Vulnerability."" | CVE-2017-0143: The SMBv1 server in Microsoft Windows Vista SP2; Windows Server 2008 SP2 and R2 SP1; Windows 7 SP1; Windows 8.1; Windows Server 2012 Gold and R2; Windows RT 8.1; and Windows 10 Gold, 1511, and 1607; and Windows Server 2016 allows remote attackers to execute arbitrary code via crafted packets, aka ""Windows SMB Remote Code Execution Vulnerability."" This vulnerability is different from those described in CVE-2017-0144, CVE-2017-0145, CVE-2017-0146, and CVE-2017-0148. | CVE-2017-0144: The SMBv1 server in Microsoft Windows Vista SP2; Windows Server 2008 SP2 and R2 SP1; Windows 7 SP1; Windows 8.1; Windows Server 2012 Gold and R2; Windows RT 8.1; and Windows 10 Gold, 1511, and 1607; and Windows Server 2016 allows remote attackers to execute arbitrary code via crafted packets, aka ""Windows SMB Remote Code Execution Vulnerability."" This vulnerability is different from those described in CVE-2017-0143, CVE-2017-0145, CVE-2017-0146, and CVE-2017-0148.","Maintain regular system backups stored separately from the source systems which cannot be altered or encrypted by potentially compromised network devices [CPG 2.R].
+
+Patch known vulnerabilities by applying timely security updates to operating systems, software, and firmware within a risk-informed timeframe [CPG 2.F].
+
+Common Vulnerabilities and Exposures (CVE): CVE-2018-13379, CVE-2010-2861, CVE-2009-3960, CVE-2021-34473, CVE-2021-34523, CVE-2021-31207.
+
+Segment networks to restrict lateral movement from initial infected devices and other devices in the same organization [CPG 2.F].
+
+Require Phishing-Resistant MFA for access to all privileged accounts and email services accounts.
+
+Note:This joint Cybersecurity Advisory is part of an ongoing #StopRansomware effort to publish advisories for network defenders that detail various ransomware variants and ransomware threat actors. These #StopRansomware advisories include recently and historically observed tactics, techniques, and procedures (TTPs) and indicators of compromise (IOCs) to help organizations protect against ransomware. Visitstopransomware.govto see all #StopRansomware advisories and to learn more about other ransomware threats and no-cost resources.
+
+The Federal Bureau of Investigation (FBI), Cybersecurity and Infrastructure Security Agency (CISA), and the Multi-State Information Sharing and Analysis Center (MS-ISAC) are releasing this joint advisory to disseminate known Ghost (Cring)—(“Ghost”)—ransomware IOCs and TTPs identified through FBI investigation as recently as January 2025.
+
+Beginning early 2021, Ghost actors began attacking victims whose internet facing services ran outdated versions of software and firmware. This indiscriminate targeting of networks containing vulnerabilities has led to the compromise of organizations across more than 70 countries, including organizations in China. Ghost actors, located in China, conduct these widespread attacks for financial gain. Affected victims include critical infrastructure, schools and universities, healthcare, government networks, religious institutions, technology and manufacturing companies, and numerous small- and medium-sized businesses.
+
+Ghost actors rotate their ransomware executable payloads, switch file extensions for encrypted files, modify ransom note text, and use numerous ransom email addresses, which has led to variable attribution of this group over time. Names associated with this group include Ghost, Cring, Crypt3r, Phantom, Strike, Hello, Wickrme, HsHarada, and Rapture. Samples of ransomware files Ghost used during attacks are: Cring.exe, Ghost.exe, ElysiumO.exe, and Locker.exe.
+
+Ghost actors use publicly available code to exploit Common Vulnerabilities and Exposures (CVEs) and gain access to internet facing servers. Ghost actors exploit well known vulnerabilities and target networks where available patches have not been applied.
+
+The FBI, CISA, and MS-ISAC encourage organizations to implement the recommendations in theMitigationssection of this advisory to reduce the likelihood and impact of Ghost ransomware incidents.
+
+Download the PDF version of this report:
+
+For a downloadable copy of IOCs, see:
+
+Note:This advisory uses theMITRE ATT&CK®Matrix for Enterpriseframework, version 16.1. See theMITRE ATT&CK Tactics and Techniquessection of this advisory for a table of the threat actors’ activity mapped to MITRE ATT&CK tactics and techniques.
+
+The FBI has observed Ghost actors obtaining initial access to networks by exploiting public facing applications that are associated with multiple CVEs [T1190]. Their methodology includes leveraging vulnerabilities in Fortinet FortiOS appliances (CVE-2018-13379), servers running Adobe ColdFusion (CVE-2010-2861andCVE-2009-3960), Microsoft SharePoint (CVE-2019-0604), and Microsoft Exchange (CVE-2021-34473,CVE-2021-34523, andCVE-2021-31207— commonly referred to as the ProxyShell attack chain).
+
+Ghost actors have been observed uploading a web shell [T1505.003] to a compromised server and leveraging Windows Command Prompt [T1059.003] and/or PowerShell [T1059.001] to download and executeCobalt StrikeBeacon malware [T1105] that is then implanted on victim systems. Despite Ghost actors’ malicious implementation, Cobalt Strike is a commercially available adversary simulation tool often used for the purposes of testing an organization’s security controls.
+
+Persistence is not a major focus for Ghost actors, as they typically only spend a few days on victim networks. In multiple instances, they have been observed proceeding from initial compromise to the deployment of ransomware within the same day. However, Ghost actors sporadically create new local [T1136.001] and domain accounts [T1136.002] and change passwords for existing accounts [T1098]. In 2024, Ghost actors were observed deploying web shells [T1505.003] on victim web servers.
+
+Ghost actors often rely on built in Cobalt Strike functions to steal process tokens running under the SYSTEM user context to impersonate the SYSTEM user, often for the purpose of running Beacon a second time with elevated privileges [T1134.001].
+
+Ghost actors have been observed using multiple open-source tools in an attempt at privilege escalation through exploitation [T1068] such as “SharpZeroLogon,” “SharpGPPPass,” “BadPotato,” and “GodPotato.” These privilege escalation tools would not generally be used by individuals with legitimate access and credentials.
+
+SeeTable 1for a descriptive listing of tools.
+
+Ghost actors use the built in Cobalt Strike function “hashdump” orMimikatz[T1003] to collect passwords and/or password hashes to aid them with unauthorized logins and privilege escalation or to pivot to other victim devices.
+
+Ghost actors used their access through Cobalt Strike to display a list of running processes [T1057] to determine which antivirus software [T1518.001] is running so that it can be disabled [T1562.001]. Ghost frequently runs a command to disable Windows Defender on network connected devices. Options used in this command are: Set-MpPreference -DisableRealtimeMonitoring 1 -DisableIntrusionPreventionSystem 1 -DisableBehaviorMonitoring 1 -DisableScriptScanning 1 -DisableIOAVProtection 1 -EnableControlledFolderAccess Disabled -MAPSReporting Disabled -SubmitSamplesConsent NeverSend.
+
+Ghost actors have been observed using other built-in Cobalt Strike commands for domain account discovery [T1087.002], open-source tools such as “SharpShares” for network share discovery [T1135], and “Ladon 911” and “SharpNBTScan” for remote systems discovery [T1018]. Network administrators would be unlikely to use these tools for network share or remote systems discovery.
+
+Ghost actors used elevated access and Windows Management Instrumentation Command-Line (WMIC) [T1047] to run PowerShell commands on additional systems on the victim network— often for the purpose of initiating additional Cobalt Strike Beacon infections. The associated encoded string is a base 64 PowerShell command that always begins with: powershell -nop -w hidden -encodedcommand JABzAD0ATgBlAHcALQBPAGIAagBlAGMAdAAgAEkATwAuAE0AZQBtAG8AcgB5AFMAdAByAGUAYQBtACgALABbAEMAbwBuAHYAZQByAHQAXQA6ADoARgByAG8AbQBCAGEAcwBlADYANABTAHQAcgBpAG4AZwAoACIA… [T1132.001][T1564.003].
+
+This string decodes to “$s=New-Object IO.MemoryStream(,[Convert]::FromBase64String(“” and is involved with the execution of Cobalt Strike in memory on the target machine.
+
+In cases where lateral movement attempts are unsuccessful, Ghost actors have been observed abandoning an attack on a victim.
+
+Ghost ransom notes often claim exfiltrated data will be sold if a ransom is not paid. However, Ghost actors do not frequently exfiltrate a significant amount of information or files, such as intellectual property or personally identifiable information (PII), that would cause significant harm to victims if leaked. The FBI has observed limited downloading of data to Cobalt Strike Team Servers [T1041]. Victims and other trusted third parties have reported limited uses of Mega.nz [T1567.002] and installed web shells for similar limited data exfiltration.Note:The typical data exfiltration is less than hundreds of gigabytes of data.
+
+Ghost actors rely heavily on Cobalt Strike Beacon malware and Cobalt Strike Team Servers for command and control (C2) operations, which function using hypertext transfer protocol (HTTP) and hypertext transfer protocol secure (HTTPS) [T1071.001]. Ghost rarely registers domains associated with their C2 servers. Instead, connections made to a uniform resource identifier (URI) of a C2 server, for the purpose of downloading and executing Beacon malware, directly reference the C2 server’s IP address. For example, http://xxx.xxx.xxx.xxx:80/Google.com where xxx.xxx.xxx.xxxrepresents the C2 server’s IP address.
+
+For email communication with victims, Ghost actors use legitimate email services that include traffic encryption features. [T1573] Some examples of emails services that Ghost actors have been observed using are Tutanota, Skiff, ProtonMail, Onionmail, and Mailfence.
+
+Note:Table 2contains a list of Ghost ransom email addresses.
+
+Ghost actors use Cring.exe, Ghost.exe, ElysiumO.exe, and Locker.exe, which are all ransomware executables that share similar functionality. Ghost variants can be used to encrypt specific directories or the entire system’s storage [T1486]. The nature of executables’ operability is based on command line arguments used when executing the ransomware file. Various file extensions and system folders are excluded during the encryption process to avoid encrypting files that would render targeted devices inoperable.
+
+These ransomware payloads clear Windows Event Logs [T1070.001], disable the Volume Shadow Copy Service, and delete shadow copies to inhibit system recovery attempts [T1490]. Data encrypted with Ghost ransomware variants cannot be recovered without the decryption key. Ghost actors hold the encrypted data for ransom and typically demand anywhere from tens to hundreds of thousands of dollars in cryptocurrency in exchange for decryption software [T1486].
+
+The impact of Ghost ransomware activity varies widely on a victim-to-victim basis. Ghost actors tend to move to other targets when confronted with hardened systems, such as those where proper network segmentation prevents lateral moment to other devices.
+
+Table 1lists several tools and applications Ghost actors have used for their operations. The use of these tools and applications on a network should be investigated further.
+
+Note:Authors of these tools generally state that they should not be used in illegal activity.
+
+34b3009590ec2d361f07cac320671410
+
+d9c019182d88290e5489cdf3b607f982
+
+29e44e8994197bdb0c2be6fc5dfc15c2
+
+c9e35b5c1dc8856da25965b385a26ec4
+
+d1c5e7b8e937625891707f8b4b594314
+
+c3b8f6d102393b4542e9f951c9435255
+
+0a5c4ad3ec240fbfd00bdc1d36bd54eb
+
+Table 3is a subset of ransom email addresses that have been included in Ghost ransom notes.
+
+Starting approximately in August 2024, Ghost actors began using TOX IDs in ransom notes as an alternative method for communicating with victims. For example: EFE31926F41889DBF6588F27A2EC3A2D7DEF7D2E9E0A1DEFD39B976A49C11F0E19E03998DBDA and E83CD54EAAB0F31040D855E1ED993E2AC92652FF8E8742D3901580339D135C6EBCD71002885B.
+
+SeeTable 4 to Table 13for all referenced threat actor tactics and techniques in this advisory. For assistance with mapping malicious cyber activity to the MITRE ATT&CK framework, version 16.1, see CISA and MITRE ATT&CK’sBest Practices for MITRE ATT&CK Mappingand CISA’sDecider Tool.
+
+The FBI, CISA, and MS-ISAC recommend organizations reference their#StopRansomware Guideand implement the mitigations below to improve cybersecurity posture on the basis of the Ghost ransomware activity. These mitigations align with theCross-Sector Cybersecurity Performance Goals (CPGs)developed by CISA and the National Institute of Standards and Technology (NIST). The CPGs provide a minimum set of practices and protections that CISA and NIST recommend all organizations implement. CISA and NIST based the CPGs on existing cybersecurity frameworks and guidance to protect against the most common and impactful threats, tactics, techniques, and procedures. Visit CISA’sCPGs webpagefor more information on the CPGs, including additional recommended baseline protections.
+
+In addition to applying mitigations, the FBI, CISA, and MS-ISAC recommend exercising, testing, and validating your organization’s security program against the threat behaviors mapped to the MITRE ATT&CK for Enterprise framework in this advisory.
+
+To get started:
+
+Your organization has no obligation to respond or provide information back to the FBI in response to this joint advisory. If, after reviewing the information provided, your organization decides to provide information to the FBI, reporting must be consistent with applicable state and federal laws.
+
+The FBI is interested in any information that can be shared, to include logs showing communication to and from foreign IP addresses, a sample ransom note, communications with threat actors, Bitcoin wallet information, and/or decryptor files.
+
+Additional details of interest include a targeted company point of contact, status and scope of infection, estimated loss, operational impact, date of infection, date detected, initial attack vector, and host and network-based indicators.
+
+The FBI, CISA, and MS-ISAC do not encourage paying ransom as payment does not guarantee victim files will be recovered. Furthermore, payment may also embolden adversaries to target additional organizations, encourage other criminal actors to engage in the distribution of ransomware, and/or fund illicit activities. Regardless of whether you or your organization have decided to pay the ransom, the FBI and CISA urge you to promptly report ransomware incidents to FBI’sInternet Crime Complain Center (IC3), alocal FBI Field Office, or CISA via the agency’sIncident Reporting Systemor its 24/7 Operations Center (report@cisa.gov) or by calling 1-844-Say-CISA (1-844-729-2472).
+
+The information in this report is being provided “as is” for informational purposes only. The FBI, CISA, and MS-ISAC do not endorse any commercial entity, product, company, or service, including any entities, products, or services linked within this document. Any reference to specific commercial entities, products, processes, or services by service mark, trademark, manufacturer, or otherwise, does not constitute or imply endorsement, recommendation, or favoring by the FBI, CISA, and the MS-ISAC.
+
+February 19, 2025:Initial version.",2026-02-25T22:00:01.111695+00:00

@@ -46,6 +46,9 @@ ADVISORY_URL_PATTERN = re.compile(
 # CVE pattern
 CVE_PATTERN = re.compile(r"CVE-\d{4}-\d{4,}")
 
+# CVE.org (MITRE) REST API
+CVE_ORG_API_URL = "https://cveawg.mitre.org/api/cve/{cve_id}"
+
 
 class AdvisoryCache:
     """Simple file-based cache for HTML pages with ETag support."""
@@ -115,27 +118,21 @@ class CISAAdvisoryScraper:
         self.delay = delay
         self.max_retries = max_retries
         self.discovered_urls: Set[str] = set()
+        self._last_fetch_was_cached = False  # set by _fetch_with_cache
 
     def _fetch_with_cache(self, url: str) -> Optional[str]:
-        """Fetch URL with caching and conditional requests."""
+        """Fetch URL with caching. Returns cached content instantly if available."""
         cached = self.cache.get(url)
-        headers = {}
 
+        # Return from cache immediately — no network roundtrip needed
         if cached:
-            html, cache_headers = cached
-            # Add conditional request headers
-            if cache_headers.get("etag"):
-                headers["If-None-Match"] = cache_headers["etag"]
-            if cache_headers.get("last_modified"):
-                headers["If-Modified-Since"] = cache_headers["last_modified"]
+            self._last_fetch_was_cached = True
+            return cached[0]
 
+        self._last_fetch_was_cached = False
         for attempt in range(self.max_retries):
             try:
-                response = self.session.get(url, headers=headers, timeout=15)
-
-                # 304 Not Modified - use cached version
-                if response.status_code == 304 and cached:
-                    return cached[0]
+                response = self.session.get(url, timeout=15)
 
                 # 404 Not Found
                 if response.status_code == 404:
@@ -201,8 +198,11 @@ class CISAAdvisoryScraper:
             if not found_new:
                 break
 
-            # Check for next page
-            has_next = soup.select_one("li.pager__item--next a, li.next a") is not None
+            # Check for next page (CISA uses numeric c-pager__item links)
+            has_next = soup.select_one(
+                f"li.c-pager__item a[href='?page={page_num + 1}'], "
+                f"li.pager__item--next a, li.next a"
+            ) is not None
             if not has_next:
                 break
 
@@ -210,7 +210,9 @@ class CISAAdvisoryScraper:
                 break
 
             page_num += 1
-            time.sleep(self.delay)
+            # Skip delay for cached listing pages
+            if not self._last_fetch_was_cached:
+                time.sleep(self.delay)
 
         return urls
 
@@ -293,6 +295,49 @@ class CISAAdvisoryScraper:
                     )
 
         return cves
+
+    def _fetch_cve_description(self, cve_id: str) -> str:
+        """Fetch the English description for a CVE from the MITRE CVE.org API."""
+        url = CVE_ORG_API_URL.format(cve_id=cve_id)
+        try:
+            cached = self.cache.get(url)
+            if cached:
+                self._last_fetch_was_cached = True
+                data = json.loads(cached[0])
+            else:
+                self._last_fetch_was_cached = False
+                response = self.session.get(url, timeout=15)
+                if response.status_code != 200:
+                    return ""
+                self.cache.set(url, response.text, dict(response.headers))
+                data = response.json()
+
+            descriptions = (
+                data.get("containers", {})
+                    .get("cna", {})
+                    .get("descriptions", [])
+            )
+            # Prefer English; fall back to first available
+            for desc in descriptions:
+                if desc.get("lang", "").startswith("en"):
+                    return desc.get("value", "").strip()
+            if descriptions:
+                return descriptions[0].get("value", "").strip()
+        except Exception as exc:
+            print(f"  Warning: could not fetch CVE.org description for {cve_id}: {exc}")
+        return ""
+
+    def _enrich_cves_with_cveorg(self, cves: List[Dict[str, str]]) -> None:
+        """Add 'cveorg_description' key to each CVE dict by querying CVE.org."""
+        for cve in cves:
+            cve_id = cve.get("id", "")
+            if not cve_id:
+                cve["cveorg_description"] = ""
+                continue
+            cve["cveorg_description"] = self._fetch_cve_description(cve_id)
+            # Only delay when we actually hit the network (not for cached CVEs)
+            if not self._last_fetch_was_cached:
+                time.sleep(0.2)
 
     def _extract_outbound_links(self, soup: BeautifulSoup) -> List[Dict[str, str]]:
         """Extract relevant outbound links (KEV, BOD, criteria pages)."""
@@ -470,6 +515,11 @@ class CISAAdvisoryScraper:
         # CVEs with descriptions
         advisory["cves"] = self._extract_cves(main)
 
+        # Enrich CVEs with descriptions from CVE.org
+        if advisory["cves"]:
+            print(f"  Fetching CVE.org descriptions for {len(advisory['cves'])} CVE(s)...")
+            self._enrich_cves_with_cveorg(advisory["cves"])
+
         # Body text
         advisory["body_text"] = self._extract_body_text(main, advisory["cves"])
 
@@ -484,26 +534,45 @@ class CISAAdvisoryScraper:
         if html is None:
             return None
 
-        time.sleep(self.delay)
+        # Only sleep when we actually hit the network
+        if not self._last_fetch_was_cached:
+            time.sleep(self.delay)
         return self.parse_advisory(html, url)
 
     def scrape_advisories(
-        self, urls: Optional[List[str]] = None, max_advisories: Optional[int] = None
+        self, urls: Optional[List[str]] = None, max_advisories: Optional[int] = None,
+        max_pages: Optional[int] = None,
+        output_path: Optional[Path] = None,
     ) -> List[Dict[str, Any]]:
-        """Scrape multiple advisories with deduplication."""
+        """Scrape multiple advisories with deduplication.
+        
+        If output_path is given, each advisory is written to CSV immediately
+        after scraping so progress is never lost on interruption.
+        """
         if urls is None:
             # Discover URLs
             print("Discovering advisory URLs...")
-            urls = self.discover_advisory_urls(max_pages=10)
+            urls = self.discover_advisory_urls(max_pages=max_pages)
             print(f"Discovered {len(urls)} advisory URLs")
 
         if max_advisories:
             urls = urls[:max_advisories]
 
+        # Load already-scraped URLs from existing CSV to allow resume
+        scraped_urls: Set[str] = set()
+        if output_path and output_path.exists() and output_path.stat().st_size > 0:
+            with open(output_path, newline="", encoding="utf-8") as f:
+                scraped_urls = {row["url"] for row in csv.DictReader(f)}
+            if scraped_urls:
+                print(f"Resuming: {len(scraped_urls)} already scraped, skipping them.")
+
         advisories = []
-        seen_hashes = set()
+        seen_hashes: Set[str] = set()
 
         for i, url in enumerate(urls, 1):
+            if url in scraped_urls:
+                continue  # already in CSV from a previous run
+
             print(f"Scraping {i}/{len(urls)}: {url}")
             advisory = self.scrape_advisory(url)
 
@@ -513,47 +582,68 @@ class CISAAdvisoryScraper:
                 if content_hash not in seen_hashes:
                     seen_hashes.add(content_hash)
                     advisories.append(advisory)
+                    # Write immediately so progress survives interruption
+                    if output_path:
+                        append_csv_row(advisory, output_path)
                 else:
                     print(f"  Skipped duplicate content")
 
         return advisories
 
 
+# Column order used by every CSV writer
+_CSV_FIELDS = [
+    "url", "title", "advisory_type", "release_date",
+    "cve_ids", "cve_count", "cve_descriptions", "cve_descriptions_cveorg",
+    "body_text", "fetched_at",
+]
+
+
+def _advisory_to_row(adv: Dict[str, Any]) -> Dict[str, Any]:
+    """Flatten one advisory dict into a CSV-ready dict."""
+    cve_ids = ", ".join(cve["id"] for cve in adv.get("cves", []))
+    cve_descriptions = " | ".join(
+        f"{cve['id']}: {cve.get('description', '')}"
+        for cve in adv.get("cves", [])
+    )
+    cve_descriptions_cveorg = " | ".join(
+        f"{cve['id']}: {cve.get('cveorg_description', '')}"
+        for cve in adv.get("cves", [])
+    )
+    return {
+        "url": adv.get("source_url", ""),
+        "title": adv.get("title", ""),
+        "advisory_type": adv.get("advisory_type", ""),
+        "release_date": adv.get("release_date", {}).get("iso8601", ""),
+        "cve_ids": cve_ids,
+        "cve_count": len(adv.get("cves", [])),
+        "cve_descriptions": cve_descriptions,
+        "cve_descriptions_cveorg": cve_descriptions_cveorg,
+        "body_text": adv.get("body_text", ""),
+        "fetched_at": adv.get("fetched_at", ""),
+    }
+
+
+def append_csv_row(advisory: Dict[str, Any], output_path: Path) -> None:
+    """Append a single advisory to the CSV immediately (creates file+header if new)."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    is_new = not output_path.exists() or output_path.stat().st_size == 0
+    with open(output_path, "a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=_CSV_FIELDS)
+        if is_new:
+            writer.writeheader()
+        writer.writerow(_advisory_to_row(advisory))
+
+
 def write_csv(advisories: List[Dict[str, Any]], output_path: Path) -> None:
-    """Write advisories to CSV file with flattened structure."""
+    """Write all advisories to CSV at once (used for single-URL mode)."""
     if not advisories:
         return
-    
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    
-    # Flatten nested data for CSV
-    csv_rows = []
-    for adv in advisories:
-        # Combine CVE IDs and descriptions
-        cve_ids = ", ".join(cve["id"] for cve in adv.get("cves", []))
-        cve_descriptions = " | ".join(
-            f"{cve['id']}: {cve.get('description', '')}" 
-            for cve in adv.get("cves", [])
-        )
-        
-        csv_rows.append({
-            "url": adv.get("source_url", ""),
-            "title": adv.get("title", ""),
-            "advisory_type": adv.get("advisory_type", ""),
-            "release_date": adv.get("release_date", {}).get("iso8601", ""),
-            "cve_ids": cve_ids,
-            "cve_count": len(adv.get("cves", [])),
-            "cve_descriptions": cve_descriptions,
-            "body_text": adv.get("body_text", ""),
-            "fetched_at": adv.get("fetched_at", ""),
-        })
-    
-    # Write to CSV
     with open(output_path, "w", newline="", encoding="utf-8") as f:
-        if csv_rows:
-            writer = csv.DictWriter(f, fieldnames=csv_rows[0].keys())
-            writer.writeheader()
-            writer.writerows(csv_rows)
+        writer = csv.DictWriter(f, fieldnames=_CSV_FIELDS)
+        writer.writeheader()
+        writer.writerows(_advisory_to_row(adv) for adv in advisories)
 
 
 def validate_advisory(advisory: Dict[str, Any]) -> List[str]:
@@ -595,6 +685,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="Scrape a single advisory URL instead of discovering",
     )
     parser.add_argument(
+        "--max-pages",
+        type=int,
+        default=None,
+        help="Maximum listing pages to crawl when discovering URLs (default: all)",
+    )
+    parser.add_argument(
         "--delay",
         type=float,
         default=1.0,
@@ -629,10 +725,14 @@ def main() -> None:
         advisory = scraper.scrape_advisory(args.url)
         advisories = [advisory] if advisory else []
     else:
-        # Discover and scrape multiple
-        advisories = scraper.scrape_advisories(max_advisories=args.max_advisories)
+        # Discover and scrape multiple — writes each row immediately
+        advisories = scraper.scrape_advisories(
+            max_advisories=args.max_advisories,
+            max_pages=args.max_pages,
+            output_path=args.output,
+        )
 
-    if not advisories:
+    if not advisories and not (args.output.exists() and args.output.stat().st_size > 0):
         print("No advisories scraped.")
         return
 
@@ -644,12 +744,14 @@ def main() -> None:
             if issues:
                 print(f"  {advisory['source_url']}: {', '.join(issues)}")
 
-    # Write output
-    write_csv(advisories, args.output)
+    # For single-URL mode, write_csv is still used (batch)
+    if args.url:
+        write_csv(advisories, args.output)
 
-    # Summary
+    # Summary — count from CSV (accurate even after resume)
     total_cves = sum(len(adv.get("cves", [])) for adv in advisories)
-    print(f"\nScraped {len(advisories)} advisories with {total_cves} CVEs -> {args.output}")
+    csv_total = sum(1 for _ in open(args.output, encoding="utf-8")) - 1 if args.output.exists() else len(advisories)
+    print(f"\nScraped {len(advisories)} new advisories this run ({csv_total} total in CSV) with {total_cves} new CVEs -> {args.output}")
 
     # Sample output for first advisory
     if advisories:
